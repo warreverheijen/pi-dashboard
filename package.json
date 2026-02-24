@@ -1,0 +1,20 @@
+{
+  "name": "pi-dashboard",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:portainer": "node testPortainer.js",
+    "test:sonarr": "node testSonarr.js",
+    "test:serverstats": "node testServerStats.js",
+    "start": "node server.js"
+  },
+  "private": true,
+  "dependencies": {
+    "axios": "^1.5.0",
+    "dotenv": "^16.3.0",
+    "express": "^4.18.4",
+    "systeminformation": "^5.24.2"
+  }
+}

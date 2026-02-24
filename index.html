@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.lordicon.com/lordicon.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>Pi Dashboard</title>
+</head>
+<body>
+    <ul class="menu">
+        <li class="menu-item" data-page="overview">
+            <lord-icon
+                    src="MEDIA/LOTTIE/overview.json"
+                    trigger="hover"
+                    stroke="light"
+                    state="hover-pinch"
+                    style="width:24px;height:24px">
+            </lord-icon>
+        </li>
+        <li class="menu-item" data-page="storage">
+            <lord-icon
+                    src="MEDIA/LOTTIE/cloud-storage.json"
+                    trigger="hover"
+                    stroke="light"
+                    state="hover-pinch"
+                    style="width:24px;height:24px">
+            </lord-icon>
+        </li>
+        <li class="menu-item" data-page="stack">
+            <lord-icon
+                    src="MEDIA/LOTTIE/stack.json"
+                    trigger="hover"
+                    stroke="light"
+                    state="hover-pinch"
+                    style="width:24px;height:24px">
+            </lord-icon>
+        </li>
+        <li class="menu-item" data-page="media">
+            <lord-icon
+                    src="MEDIA/LOTTIE/media.json"
+                    trigger="hover"
+                    stroke="light"
+                    state="hover-pinch"
+                    style="width:24px;height:24px">
+            </lord-icon>
+        </li>
+        <li class="menu-item" data-page="settings">
+            <lord-icon
+                    src="MEDIA/LOTTIE/settings.json"
+                    trigger="hover"
+                    stroke="light"
+                    state="hover-pinch"
+                    style="width:24px;height:24px">
+            </lord-icon>
+        </li>
+    </ul>
+
+    <div class="pages-container">
+        <!-- Overview Page -->
+        <div class="page" data-page="overview">
+            <div class="content">
+                <div class="overview-welcome">
+                    <h1 class="welcome-title">Hello Warre!</h1>
+                    <p class="welcome-text">Insert text...</p>
+                </div>
+                <div class="overview-search">
+                    <h2 class="searchbar">search here</h2>
+                    <div></div>
+                </div>
+                <div class="overview-item stack-overview">
+                    <h2 class="overview-title">Stack</h2>
+                    <div></div>
+                </div>
+                <div class="overview-item stats1-overview">
+                    <h2 class="overview-title">CPU / RAM</h2>
+                    <div class="stats-content" id="cpuRamContent">
+                        <div class="loading-container">
+                            <div class="loading-spinner"></div>
+                            <p>Loading...</p>
+                        </div>
+                        <div class="stat-line"><span>CPU Usage</span><span id="cpuUsageValue">N/A</span></div>
+                        <div class="cpu-bar-container" id="cpuBar">
+                            <div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div><div class="cpu-bar-segment"></div>
+                        </div>
+                        <div class="stat-line"><span>CPU Temp</span><span id="cpuTempValue">N/A</span></div>
+                        <div class="cpu-temp-bar-container" id="cpuTempBar">
+                            <div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div><div class="cpu-temp-bar-segment"></div>
+                        </div>
+                        <div class="stat-line"><span>RAM Usage</span><span id="ramUsageValue">N/A</span></div>
+                        <div class="ram-bar-container" id="ramBar">
+                            <div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div><div class="ram-bar-segment"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="overview-item stats2-overview">
+                    <h2 class="overview-title">Storage</h2>
+                    <div class="storage-card" id="storageCharts">
+                        <div class="loading-container">
+                            <div class="loading-spinner"></div>
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+                    <div class="stats-content" id="storageContent"></div>
+                </div>
+                <div class="overview-item stats3-overview">
+                    <h2 class="overview-title">Network</h2>
+                    <div class="stats-content" id="networkContent">
+                        <div class="loading-container">
+                            <div class="loading-spinner"></div>
+                            <p>Loading...</p>
+                        </div>
+                        <div class="stat-line"><span>Connected</span><span id="netIfaceValue">N/A</span></div>
+                        <div class="stat-line"><span>Download</span><span id="netDownValue">N/A</span></div>
+                        <div class="net-bar-container" id="netDownBar">
+                            <div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div>
+                        </div>
+                        <div class="stat-line"><span>Upload</span><span id="netUpValue">N/A</span></div>
+                        <div class="net-bar-container" id="netUpBar">
+                            <div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Storage Page -->
+        <div class="page" data-page="storage">
+            <div class="content">
+                <h1 class="page-title">Storage</h1>
+            </div>
+        </div>
+
+        <!-- Stack Page -->
+        <div class="page" data-page="stack">
+            <div class="content">
+                <h1 class="page-title">Stack</h1>
+            </div>
+        </div>
+
+        <!-- Media Page -->
+        <div class="page" data-page="media">
+            <div class="content">
+                <h1 class="page-title">Media</h1>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div class="page" data-page="settings">
+            <div class="content">
+                <h1 class="page-title">Settings</h1>
+            </div>
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+</body>
+</html>
+
