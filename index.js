@@ -1,3 +1,49 @@
+// Page Navigation
+let currentPage = 'overview';
+const pageOrder = ['overview', 'storage', 'stack', 'media', 'settings'];
+
+function switchPage(pageName) {
+  // Hide current page with slide out
+  const currentPageEl = document.querySelector(`.page[data-page="${currentPage}"]`);
+  if (currentPageEl) {
+    currentPageEl.classList.remove('active');
+    // Determine if sliding up or down
+    const currentIndex = pageOrder.indexOf(currentPage);
+    const newIndex = pageOrder.indexOf(pageName);
+    if (newIndex > currentIndex) {
+      // Going forward: slide current page up
+      currentPageEl.classList.add('slide-out-up');
+    } else {
+      // Going backward: slide current page down
+      currentPageEl.classList.remove('slide-out-up');
+    }
+  }
+
+  // Show new page
+  const newPageEl = document.querySelector(`.page[data-page="${pageName}"]`);
+  if (newPageEl) {
+    newPageEl.classList.remove('slide-out-up');
+    newPageEl.classList.add('active');
+  }
+
+  currentPage = pageName;
+}
+
+// Menu item click handlers
+document.querySelectorAll('.menu-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const pageName = item.getAttribute('data-page');
+    switchPage(pageName);
+  });
+});
+
+/*-----Overview Page Logic-----*/
+let ramHistory = Array(30).fill(0);
+let cpuHistory = Array(30).fill(0);
+let cpuTempHistory = Array(30).fill(0);
+let netDownHistory = Array(30).fill(0);
+let netUpHistory = Array(30).fill(0);
+
 async function fetchStack() {
   try {
     const res = await fetch('/api/stack');
@@ -13,11 +59,6 @@ async function fetchStack() {
   }
 }
 
-let ramHistory = Array(30).fill(0);
-let cpuHistory = Array(30).fill(0);
-let cpuTempHistory = Array(30).fill(0);
-let netDownHistory = Array(30).fill(0);
-let netUpHistory = Array(30).fill(0);
 
 function updateBar(containerId, history, percent) {
   const container = document.getElementById(containerId);
@@ -26,6 +67,7 @@ function updateBar(containerId, history, percent) {
   history.push(Math.max(0, Math.min(100, percent || 0)));
   const segments = container.querySelectorAll('div');
   const MIN_VISUAL_PCT = 2; // show a tiny bar even at 0
+
   segments.forEach((seg, idx) => {
     const val = history[idx] || 0;
     const visual = val === 0 ? MIN_VISUAL_PCT : val;
@@ -197,8 +239,8 @@ function renderStats(stats) {
       const extUsed = ext ? (ext.size - ext.free) : null;
 
       storageContent.innerHTML = `
-        <div class="stat-line"><span>SD</span><span><span style="color: var(--highlight-color)">${sd ? formatGB(sdUsed) : 'N/A'}</span>${sd ? ` / ${formatGB(sd.size)} GB` : ''}</span></div>
-        <div class="stat-line"><span>External</span><span><span style="color: var(--green-color)">${ext ? formatGB(extUsed) : 'N/A'}</span>${ext ? ` / ${formatGB(ext.size)} GB` : ''}</span></div>
+        <div class="stat-line"><span>SD</span><span><span style="color: var(--color-storage-sd)">${sd ? formatGB(sdUsed) : 'N/A'}</span>${sd ? ` / ${formatGB(sd.size)} GB` : ''}</span></div>
+        <div class="stat-line"><span>External</span><span><span style="color: var(--color-storage-external)">${ext ? formatGB(extUsed) : 'N/A'}</span>${ext ? ` / ${formatGB(ext.size)} GB` : ''}</span></div>
       `;
     }
   }
@@ -231,14 +273,34 @@ function renderStats(stats) {
       if (netDownSpan) netDownSpan.textContent = downSpeed;
       if (netUpSpan) netUpSpan.textContent = upSpeed;
 
-      // Normalize to 0-100 based on a 100 MB/s max for display
-      const downPercent = Math.min(100, (downBytes / (100 * 1024 * 1024)) * 100);
-      const upPercent = Math.min(100, (upBytes / (100 * 1024 * 1024)) * 100);
+      // Normalize to 2-100 based on a 10 MB/s max for display (scales to typical home network speeds)
+      const maxBytesPerSec = 10 * 1024 * 1024; // 10 MB/s baseline
+      const downPercent = Math.max(2, Math.min(100, (downBytes / maxBytesPerSec) * 100));
+      const upPercent = Math.max(2, Math.min(100, (upBytes / maxBytesPerSec) * 100));
 
       updateNetDownBar(downPercent);
       updateNetUpBar(upPercent);
     }
   }
+}
+
+async function fetchFact() {
+  try {
+    const res = await fetch('/api/fact');
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.fact || null;
+  } catch (err) {
+    console.error('Failed to fetch fact:', err);
+    return null;
+  }
+}
+
+async function renderFact() {
+  const textEl = document.querySelector('.welcome-text');
+  if (!textEl) return;
+  const fact = await fetchFact();
+  textEl.textContent = "Fact: " + fact || 'Insert text...';
 }
 
 function formatBytes(bytes) {
@@ -271,58 +333,277 @@ async function refresh() {
   renderStats(stats);
 }
 
-function addRefreshButton() {
-  const container = document.querySelector('.stack-overview > div');
-  if (!container) return;
-  const btn = document.createElement('button');
-  btn.textContent = 'Refresh';
-  btn.className = 'stack-refresh-btn';
-  btn.addEventListener('click', refresh);
-  container.insertBefore(btn, container.firstChild);
-}
-
-// Page Navigation
-let currentPage = 'overview';
-const pageOrder = ['overview', 'storage', 'stack', 'media', 'settings'];
-
-function switchPage(pageName) {
-  // Hide current page with slide out
-  const currentPageEl = document.querySelector(`.page[data-page="${currentPage}"]`);
-  if (currentPageEl) {
-    currentPageEl.classList.remove('active');
-    // Determine if sliding up or down
-    const currentIndex = pageOrder.indexOf(currentPage);
-    const newIndex = pageOrder.indexOf(pageName);
-    if (newIndex > currentIndex) {
-      // Going forward: slide current page up
-      currentPageEl.classList.add('slide-out-up');
-    } else {
-      // Going backward: slide current page down
-      currentPageEl.classList.remove('slide-out-up');
-    }
-  }
-
-  // Show new page
-  const newPageEl = document.querySelector(`.page[data-page="${pageName}"]`);
-  if (newPageEl) {
-    newPageEl.classList.remove('slide-out-up');
-    newPageEl.classList.add('active');
-  }
-
-  currentPage = pageName;
-}
-
-// Menu item click handlers
-document.querySelectorAll('.menu-item').forEach(item => {
-  item.addEventListener('click', () => {
-    const pageName = item.getAttribute('data-page');
-    switchPage(pageName);
-  });
-});
-
-window.addEventListener('DOMContentLoaded', () => {
-  switchPage('overview');
-  addRefreshButton();
+function initOverview() {
   refresh();
-  setInterval(refresh, 1000); // update stats/ram bar every 5s
+  renderFact();
+  setInterval(refresh, 1000);
+}
+
+/*-----File Browser Logic-----*/
+// File browser state
+let currentFilePath = '';
+let selectedFiles = [];
+let clipboardFiles = [];
+
+const btnUpload = document.getElementById('btnUpload');
+const btnDownload = document.getElementById('btnDownload');
+const btnCopy = document.getElementById('btnCopy');
+const btnPaste = document.getElementById('btnPaste');
+const btnDelete = document.getElementById('btnDelete');
+const btnRename = document.getElementById('btnRename');
+const fileUploadInput = document.getElementById('fileUploadInput');
+
+async function fetchFiles(path = '') {
+  try {
+    const query = path ? `?path=${encodeURIComponent(path)}` : '';
+    const res = await fetch(`/api/files${query}`);
+    if (!res.ok) {
+      console.error('Failed to fetch files: HTTP', res.status);
+      return null;
+    }
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to fetch files:', err);
+    return null;
+  }
+}
+
+function formatFileSize(bytes) {
+  if (!bytes) return '0 B';
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
+}
+
+function renderFileList(data) {
+  if (!data) {
+    return '<div class="loading-container"><div class="loading-spinner"></div><p>Failed to load files</p></div>';
+  }
+
+  if (!data.items || data.items.length === 0) {
+    return '<div style="padding: 20px; text-align: center; color: #999;">Empty directory</div>';
+  }
+
+  return data.items.map(item => `
+    <div class="file-item" data-path="${item.path}" data-type="${item.type}" data-name="${item.name}">
+      <div class="file-icon">
+        <img src="MEDIA/ICONS/${item.type === 'folder' ? 'folder' : 'file'}.svg" alt="${item.type}" onerror="this.style.display='none'">
+      </div>
+      <div class="file-info">
+        <div class="file-name">${item.name}</div>
+        <div class="file-meta">${new Date(item.modified).toLocaleDateString()}</div>
+      </div>
+      <div class="file-size">${formatFileSize(item.size)}</div>
+    </div>
+  `).join('');
+}
+
+function updateBreadcrumb(path) {
+  const breadcrumb = document.getElementById('breadcrumb');
+  if (!breadcrumb) return;
+
+  const parts = path ? path.split('/').filter(p => p) : [];
+  let html = '<span class="breadcrumb-item" data-path="">root</span>';
+
+  let cumPath = '';
+  for (const part of parts) {
+    cumPath += (cumPath ? '/' : '') + part;
+    html += `<span class="breadcrumb-separator">/</span><span class="breadcrumb-item" data-path="${cumPath}">${part}</span>`;
+  }
+
+  breadcrumb.innerHTML = html;
+
+  // Add click handlers
+  document.querySelectorAll('.breadcrumb-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const path = item.getAttribute('data-path');
+      navigateToPath(path);
+    });
+  });
+}
+
+async function navigateToPath(path) {
+  currentFilePath = path;
+  selectedFiles = [];
+  updateToolbarState();
+
+  const fileList = document.getElementById('fileList');
+  if (!fileList) return;
+
+  fileList.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div><p>Loading...</p></div>';
+
+  const data = await fetchFiles(path);
+  updateBreadcrumb(data?.currentPath || '');
+
+  // This will replace the entire fileList content including the loading container
+  fileList.innerHTML = renderFileList(data);
+
+  // Add click handlers to file items
+  document.querySelectorAll('.file-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        item.classList.toggle('selected');
+        const itemPath = item.getAttribute('data-path');
+        if (selectedFiles.includes(itemPath)) {
+          selectedFiles = selectedFiles.filter(p => p !== itemPath);
+        } else {
+          selectedFiles.push(itemPath);
+        }
+      } else {
+        document.querySelectorAll('.file-item').forEach(fi => fi.classList.remove('selected'));
+        item.classList.add('selected');
+        selectedFiles = [item.getAttribute('data-path')];
+
+        const itemType = item.getAttribute('data-type');
+        if (itemType === 'folder') {
+          navigateToPath(item.getAttribute('data-path'));
+        }
+      }
+      updateToolbarState();
+    });
+  });
+}
+
+function updateToolbarState() {
+  document.getElementById('btnDownload').disabled = selectedFiles.length === 0;
+  document.getElementById('btnCopy').disabled = selectedFiles.length === 0;
+  document.getElementById('btnDelete').disabled = selectedFiles.length === 0;
+  document.getElementById('btnRename').disabled = selectedFiles.length !== 1;
+  document.getElementById('btnPaste').disabled = clipboardFiles.length === 0;
+}
+
+function initializeFileBrowser() {
+// Initialize file browser
+  if (btnUpload) {
+    btnUpload.addEventListener('click', () => {
+      fileUploadInput.click();
+    });
+  }
+
+  if (fileUploadInput) {
+    fileUploadInput.addEventListener('change', async (e) => {
+      const files = e.target.files;
+      if (files.length === 0) return;
+
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('path', currentFilePath);
+
+        try {
+          const res = await fetch('/api/upload', { method: 'POST', body: formData });
+          if (res.ok) {
+            console.log('Uploaded:', file.name);
+          } else {
+            alert('Failed to upload: ' + file.name);
+          }
+        } catch (err) {
+          console.error('Upload error:', err);
+        }
+      }
+
+      fileUploadInput.value = '';
+      navigateToPath(currentFilePath);
+    });
+  }
+
+  if (btnDownload) {
+    btnDownload.addEventListener('click', () => {
+      selectedFiles.forEach(filePath => {
+        const a = document.createElement('a');
+        a.href = `/api/download?path=${encodeURIComponent(filePath)}`;
+        a.download = filePath.split('/').pop();
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
+    });
+  }
+
+  if (btnCopy) {
+    btnCopy.addEventListener('click', () => {
+      clipboardFiles = [...selectedFiles];
+      updateToolbarState();
+      alert('Copied ' + clipboardFiles.length + ' file(s)');
+    });
+  }
+
+  if (btnPaste) {
+    btnPaste.addEventListener('click', async () => {
+      for (const file of clipboardFiles) {
+        try {
+          const res = await fetch('/api/copy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ source: file, dest: currentFilePath })
+          });
+          if (!res.ok) {
+            alert('Failed to paste: ' + file);
+          }
+        } catch (err) {
+          console.error('Paste error:', err);
+        }
+      }
+      navigateToPath(currentFilePath);
+    });
+  }
+
+  if (btnDelete) {
+    btnDelete.addEventListener('click', async () => {
+      if (!confirm('Delete ' + selectedFiles.length + ' file(s)?')) return;
+
+      for (const file of selectedFiles) {
+        try {
+          const res = await fetch('/api/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: file })
+          });
+          if (!res.ok) {
+            alert('Failed to delete: ' + file);
+          }
+        } catch (err) {
+          console.error('Delete error:', err);
+        }
+      }
+      selectedFiles = [];
+      navigateToPath(currentFilePath);
+    });
+  }
+
+  if (btnRename) {
+    btnRename.addEventListener('click', async () => {
+      const filePath = selectedFiles[0];
+      const name = filePath.split('/').pop();
+      const newName = prompt('Rename to:', name);
+      if (!newName || newName === name) return;
+
+      try {
+        const res = await fetch('/api/rename', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: filePath, newName })
+        });
+        if (res.ok) {
+          navigateToPath(currentFilePath);
+        } else {
+          alert('Failed to rename');
+        }
+      } catch (err) {
+        console.error('Rename error:', err);
+      }
+    });
+  }
+
+  // Load initial file browser
+  navigateToPath('');}
+
+
+
+// Toolbar event listeners and initialization
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize overview page
+  switchPage('overview');
+  initOverview();
+  initializeFileBrowser()
 });

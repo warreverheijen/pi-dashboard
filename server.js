@@ -1,9 +1,14 @@
 const express = require('express');
 const path = require('path');
 const os = require('os');
+const fs = require('fs');
+const fileUpload = require('express-fileupload');
 const config = require('./config');
 const { initPortainer } = require('./CLIENTS/portainerClient');
 const { initServerStats } = require('./CLIENTS/serverStatsClient');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
 
 // Cache for OS CPU usage fallback
 let lastCpuSample = null;
@@ -34,12 +39,37 @@ async function getCpuUsageFromOs() {
   return Math.max(0, Math.min(100, usage));
 }
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+// Middleware
+app.use(express.json());
+app.use(fileUpload());
+
+// Safe mount point for file browsing from config
+const STORAGE_ROOT = config.STORAGE_ROOT;
+
+// Helper function to safely resolve paths
+function resolveSafePath(basePath, requestPath) {
+  const resolved = path.resolve(basePath, requestPath || '');
+  const normalized = path.normalize(resolved);
+
+  // Normalize basePath with trailing separator for comparison
+  const normalizedBase = path.normalize(basePath);
+  const baseWithSep = normalizedBase + path.sep;
+
+  // Ensure the resolved path is within the base path (prevent directory traversal)
+  // Check both with and without trailing separator for edge case where path equals basePath
+  if (normalized !== normalizedBase && !normalized.startsWith(baseWithSep)) {
+    throw new Error('Path traversal attempt detected');
+  }
+
+  return normalized;
+}
 
 // Serve static front-end files from project root
 app.use(express.static(path.join(__dirname)));
 
+// ----- API endpoints ------ //
+
+// Overview API
 app.get('/api/stack', async (req, res) => {
   if (!config.PORTAINER_URL || !config.PORTAINER_KEY) {
     return res.status(500).json({ error: 'Portainer config missing (PORTAINER_URL or PORTAINER_KEY)' });
@@ -58,7 +88,12 @@ app.get('/api/stack', async (req, res) => {
       try {
         containers = await portainer.listContainers(endpointId);
       } catch (e) {
-        // skip endpoints we cannot query
+        console.error('Portainer listContainers error:', {
+          endpointId,
+          status: e?.response?.status,
+          data: e?.response?.data,
+          message: e?.message,
+        });
         continue;
       }
 
@@ -81,11 +116,12 @@ app.get('/api/stack', async (req, res) => {
 
     res.json({ items: results });
   } catch (err) {
-    console.error('Error in /api/stack:', err);
-    res.status(500).json({ error: err.message || 'unknown error' });
+    const status = err?.response?.status || 500;
+    const data = err?.response?.data || null;
+    console.error('Error in /api/stack:', { status, data, message: err?.message });
+    res.status(status).json({ error: err?.message || 'unknown error', status, data });
   }
 });
-
 app.get('/api/stats', async (req, res) => {
   try {
     const stats = initServerStats();
@@ -144,6 +180,228 @@ app.get('/api/stats', async (req, res) => {
   } catch (err) {
     console.error('Error in /api/stats:', err);
     res.status(500).json({ error: err.message || 'unknown error' });
+  }
+});
+app.get('/api/fact', (req, res) => {
+  try {
+    const factsPath = path.join(__dirname, 'facts.json');
+    const raw = fs.readFileSync(factsPath, 'utf-8');
+    const facts = JSON.parse(raw);
+    if (!Array.isArray(facts) || facts.length === 0) {
+      return res.status(500).json({ error: 'No facts found' });
+    }
+    const fact = facts[Math.floor(Math.random() * facts.length)];
+    res.json({ fact });
+  } catch (err) {
+    console.error('Error in /api/fact:', err);
+    res.status(500).json({ error: err.message || 'unknown error' });
+  }
+});
+
+
+// File browser API
+app.get('/api/files', (req, res) => {
+  try {
+    const requestPath = req.query.path || '';
+
+    console.log('File browser request:', { STORAGE_ROOT, requestPath });
+
+    // Check if STORAGE_ROOT exists first
+    if (!fs.existsSync(STORAGE_ROOT)) {
+      console.error('STORAGE_ROOT does not exist:', STORAGE_ROOT);
+      return res.status(500).json({ error: `STORAGE_ROOT path does not exist: ${STORAGE_ROOT}` });
+    }
+
+    const dirPath = resolveSafePath(STORAGE_ROOT, requestPath);
+
+    console.log('Resolved directory path:', dirPath);
+
+    // Check if path exists and is a directory
+    if (!fs.existsSync(dirPath)) {
+      console.error('Directory path does not exist:', dirPath);
+      return res.status(404).json({ error: `Path not found: ${dirPath}` });
+    }
+
+    const stat = fs.statSync(dirPath);
+    if (!stat.isDirectory()) {
+      console.error('Path is not a directory:', dirPath);
+      return res.status(400).json({ error: 'Not a directory' });
+    }
+
+    // Read directory contents
+    const files = fs.readdirSync(dirPath, { withFileTypes: true });
+    const items = files.map(file => {
+      const filePath = path.join(dirPath, file.name);
+      const fileStat = fs.statSync(filePath);
+
+      return {
+        name: file.name,
+        type: file.isDirectory() ? 'folder' : 'file',
+        size: fileStat.size,
+        modified: fileStat.mtime,
+        path: path.relative(STORAGE_ROOT, filePath),
+      };
+    }).sort((a, b) => {
+      // Folders first, then alphabetical
+      if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    res.json({
+      currentPath: path.relative(STORAGE_ROOT, dirPath) || '/',
+      items,
+      root: STORAGE_ROOT,
+    });
+  } catch (err) {
+    console.error('Error in /api/files:', err);
+    res.status(500).json({ error: err.message || 'Failed to read directory' });
+  }
+});
+app.get('/api/debug/storage', (req, res) => {
+  const candidates = [
+    '/home/warre',
+    '/home',
+    '/root',
+    '/mnt',
+    '/media',
+    os.homedir()
+  ];
+
+  const existing = candidates.filter(p => {
+    try {
+      return fs.existsSync(p) && fs.statSync(p).isDirectory();
+    } catch {
+      return false;
+    }
+  });
+
+  res.json({
+    STORAGE_ROOT: config.STORAGE_ROOT,
+    STORAGE_ROOT_exists: fs.existsSync(config.STORAGE_ROOT),
+    existingCandidates: existing,
+    homeDir: os.homedir()
+  });
+});
+app.get('/api/download', (req, res) => {
+  try {
+    const filePath = resolveSafePath(STORAGE_ROOT, req.query.path || '');
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    const stat = fs.statSync(filePath);
+    if (!stat.isFile()) {
+      return res.status(400).json({ error: 'Not a file' });
+    }
+
+    res.download(filePath);
+  } catch (err) {
+    console.error('Error in /api/download:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/upload', (req, res) => {
+  try {
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res.status(400).json({ error: 'No files provided' });
+    }
+
+    const destPath = resolveSafePath(STORAGE_ROOT, req.body.path || '');
+    const uploadedFile = req.files.file;
+
+    if (!fs.existsSync(destPath) || !fs.statSync(destPath).isDirectory()) {
+      return res.status(400).json({ error: 'Destination is not a directory' });
+    }
+
+    const filePath = path.join(destPath, uploadedFile.name);
+    uploadedFile.mv(filePath, (err) => {
+      if (err) {
+        console.error('Upload error:', err);
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ success: true, path: path.relative(STORAGE_ROOT, filePath) });
+    });
+  } catch (err) {
+    console.error('Error in /api/upload:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/delete', (req, res) => {
+  try {
+    const filePath = resolveSafePath(STORAGE_ROOT, req.body.path);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Path not found' });
+    }
+
+    const stat = fs.statSync(filePath);
+    if (stat.isDirectory()) {
+      fs.rmSync(filePath, { recursive: true, force: true });
+    } else {
+      fs.unlinkSync(filePath);
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error in /api/delete:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/copy', (req, res) => {
+  try {
+    const sourcePath = resolveSafePath(STORAGE_ROOT, req.body.source);
+    const destDir = resolveSafePath(STORAGE_ROOT, req.body.dest);
+
+    if (!fs.existsSync(sourcePath)) {
+      return res.status(404).json({ error: 'Source not found' });
+    }
+
+    if (!fs.existsSync(destDir) || !fs.statSync(destDir).isDirectory()) {
+      return res.status(400).json({ error: 'Destination is not a directory' });
+    }
+
+    const fileName = path.basename(sourcePath);
+    const destPath = path.join(destDir, fileName);
+
+    const stat = fs.statSync(sourcePath);
+    if (stat.isDirectory()) {
+      fs.cpSync(sourcePath, destPath, { recursive: true });
+    } else {
+      fs.copyFileSync(sourcePath, destPath);
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error in /api/copy:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/rename', (req, res) => {
+  try {
+    const filePath = resolveSafePath(STORAGE_ROOT, req.body.path);
+    const newName = req.body.newName;
+
+    if (!newName || typeof newName !== 'string') {
+      return res.status(400).json({ error: 'Invalid new name' });
+    }
+
+    if (newName.includes('/') || newName.includes('\\')) {
+      return res.status(400).json({ error: 'Invalid file name' });
+    }
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Path not found' });
+    }
+
+    const dir = path.dirname(filePath);
+    const newPath = path.join(dir, newName);
+
+    fs.renameSync(filePath, newPath);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error in /api/rename:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 

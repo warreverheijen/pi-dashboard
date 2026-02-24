@@ -58,7 +58,7 @@
     <div class="pages-container">
         <!-- Overview Page -->
         <div class="page" data-page="overview">
-            <div class="content">
+            <div class="overview-content">
                 <div class="overview-welcome">
                     <h1 class="welcome-title">Hello Warre!</h1>
                     <p class="welcome-text">Insert text...</p>
@@ -111,13 +111,15 @@
                         </div>
                         <div class="stat-line"><span>Connected</span><span id="netIfaceValue">N/A</span></div>
                         <div class="stat-line"><span>Download</span><span id="netDownValue">N/A</span></div>
-                        <div class="net-bar-container" id="netDownBar">
-                            <div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div>
-                        </div>
+                    </div>
+                    <div class="net-bar-container" id="netDownBar">
+                        <div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div>
+                    </div>
+                    <div class="stats-content">
                         <div class="stat-line"><span>Upload</span><span id="netUpValue">N/A</span></div>
-                        <div class="net-bar-container" id="netUpBar">
-                            <div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div>
-                        </div>
+                    </div>
+                    <div class="net-bar-container" id="netUpBar">
+                        <div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div><div class="net-bar-segment"></div>
                     </div>
                 </div>
             </div>
@@ -125,28 +127,65 @@
 
         <!-- Storage Page -->
         <div class="page" data-page="storage">
-            <div class="content">
-                <h1 class="page-title">Storage</h1>
+            <div class="storage-content">
+                <div class="file-browser">
+                    <div class="browser-header">
+                        <div class="breadcrumb" id="breadcrumb">
+                            <span class="breadcrumb-item" data-path="">
+                                <img src="MEDIA/ICONS/folder.svg" alt="Root" class="breadcrumb-icon"> Root
+                            </span>
+                        </div>
+                    </div>
+                    <div class="browser-toolbar">
+                        <button id="btnUpload" class="toolbar-btn" title="Upload file">
+                            <img src="MEDIA/ICONS/upload.svg" alt="Upload" class="toolbar-icon">
+                        </button>
+                        <button id="btnDownload" class="toolbar-btn" title="Download selected" disabled>
+                            <img src="MEDIA/ICONS/download.svg" alt="Download" class="toolbar-icon">
+                        </button>
+                        <button id="btnCopy" class="toolbar-btn" title="Copy selected" disabled>
+                            <img src="MEDIA/ICONS/copy.svg" alt="Copy" class="toolbar-icon">
+                        </button>
+                        <button id="btnPaste" class="toolbar-btn" title="Paste" disabled>
+                            <img src="MEDIA/ICONS/paste.svg" alt="Paste" class="toolbar-icon">
+                        </button>
+                        <button id="btnDelete" class="toolbar-btn" title="Delete selected" disabled>
+                            <img src="MEDIA/ICONS/delete.svg" alt="Delete" class="toolbar-icon">
+                        </button>
+                        <button id="btnRename" class="toolbar-btn" title="Rename selected" disabled>
+                            <img src="MEDIA/ICONS/rename.svg" alt="Rename" class="toolbar-icon">
+                        </button>
+                    </div>
+                    <div class="browser-content">
+                        <div id="fileList" class="file-list">
+                            <div class="loading-container">
+                                <div class="loading-spinner"></div>
+                                <p>Loading files...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <input type="file" id="fileUploadInput" style="display: none;" multiple>
             </div>
         </div>
 
         <!-- Stack Page -->
         <div class="page" data-page="stack">
-            <div class="content">
+            <div class="stack-content">
                 <h1 class="page-title">Stack</h1>
             </div>
         </div>
 
         <!-- Media Page -->
         <div class="page" data-page="media">
-            <div class="content">
+            <div class="media-content">
                 <h1 class="page-title">Media</h1>
             </div>
         </div>
 
         <!-- Settings Page -->
         <div class="page" data-page="settings">
-            <div class="content">
+            <div class="settings-content">
                 <h1 class="page-title">Settings</h1>
             </div>
         </div>

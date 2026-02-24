@@ -1,100 +1,137 @@
-const axios = require('axios');
+const { AbortController } = global;
 
-function createAxiosInstance({ baseUrl, apiKey, authHeader }) {
+function buildHeaders({ apiKey, authHeader }) {
   const headers = {};
   if (apiKey) {
-    // support common header names
     if (authHeader) {
       headers[authHeader] = apiKey;
     } else {
-      // default to Authorization: Bearer <key>
       headers['Authorization'] = `Bearer ${apiKey}`;
     }
   }
-
-  return axios.create({
-    baseURL: baseUrl,
-    headers,
-    timeout: 10_000,
-  });
+  return headers;
 }
 
-class ApiError extends Error {
-  constructor(service, status, message, body) {
-    super(message);
-    this.service = service;
-    this.status = status;
-    this.body = body;
-  }
-}
+function createHttpClient({ baseUrl, apiKey, authHeader }) {
+  if (!baseUrl) throw new Error('baseUrl is required');
+  const headers = buildHeaders({ apiKey, authHeader });
 
-function withRetries(fn, retries = 2) {
-  return async (...args) => {
-    let attempt = 0;
-    let lastErr;
-    while (attempt <= retries) {
+  async function request(method, path, body) {
+    const url = new URL(path, baseUrl).toString();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          ...headers,
+          ...(body ? { 'Content-Type': 'application/json' } : {}),
+        },
+        body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+
+      const text = await res.text();
+      let data = text;
       try {
-        return await fn(...args);
-      } catch (err) {
-        lastErr = err;
-        // only retry on network or 5xx
-        const status = err && err.response && err.response.status;
-        if (status && status < 500) throw err;
-        attempt++;
-        const backoff = 200 * Math.pow(2, attempt);
-        await new Promise(r => setTimeout(r, backoff));
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        // non-JSON response
       }
+
+      if (!res.ok) {
+        throw new ApiError('portainer', res.status, 'Request failed', data);
+      }
+
+      return data;
+    } finally {
+      clearTimeout(timeout);
     }
-    throw lastErr;
+  }
+
+  return {
+    get: (path) => request('GET', path),
+    post: (path, body) => request('POST', path, body),
   };
 }
 
+class ApiError extends Error {
+    constructor(service, status, message, body) {
+        super(message);
+        this.service = service;
+        this.status = status;
+        this.body = body;
+    }
+}
+
+function withRetries(fn, retries = 2) {
+    return async (...args) => {
+        let attempt = 0;
+        let lastErr;
+        while (attempt <= retries) {
+            try {
+                return await fn(...args);
+            } catch (err) {
+                lastErr = err;
+                const status = err && err.response && err.response.status;
+                if (status && status < 500) throw err;
+                attempt++;
+                const backoff = 200 * Math.pow(2, attempt);
+                await new Promise(r => setTimeout(r, backoff));
+            }
+        }
+        throw lastErr;
+    };
+}
+
+
 function initPortainer({ baseUrl, apiKey, authHeader } = {}) {
   if (!baseUrl) throw new Error('baseUrl is required');
-  const client = createAxiosInstance({ baseUrl, apiKey, authHeader });
+  const client = createHttpClient({ baseUrl, apiKey, authHeader });
 
   async function getStatus() {
     try {
-      const res = await client.get('/api/status');
-      return res.data;
+      const data = await client.get('/api/status');
+      return data;
     } catch (err) {
-      throw new ApiError('portainer', err.response && err.response.status, 'Failed to get status', err.response && err.response.data);
+      throw new ApiError('portainer', err.status || err.response?.status, 'Failed to get status', err.body || err.response?.data);
     }
   }
 
   async function listEndpoints() {
     try {
-      const res = await client.get('/api/endpoints');
-      return res.data;
+      const data = await client.get('/api/endpoints');
+      return data;
     } catch (err) {
-      throw new ApiError('portainer', err.response && err.response.status, 'Failed to list endpoints', err.response && err.response.data);
+      throw new ApiError('portainer', err.status || err.response?.status, 'Failed to list endpoints', err.body || err.response?.data);
     }
   }
 
   async function listContainers(endpointId) {
     try {
-      const res = await client.get(`/api/endpoints/${endpointId}/docker/containers/json`);
-      return res.data;
+      const data = await client.get(`/api/endpoints/${endpointId}/docker/containers/json`);
+      return data;
     } catch (err) {
-      throw new ApiError('portainer', err.response && err.response.status, 'Failed to list containers', err.response && err.response.data);
+      throw new ApiError('portainer', err.status || err.response?.status, 'Failed to list containers', err.body || err.response?.data);
     }
   }
 
   async function startContainer(endpointId, containerId) {
     try {
-      const res = await client.post(`/api/endpoints/${endpointId}/docker/containers/${containerId}/start`);
-      return res.data;
+      const data = await client.post(`/api/endpoints/${endpointId}/docker/containers/${containerId}/start`);
+      return data;
     } catch (err) {
-      throw new ApiError('portainer', err.response && err.response.status, 'Failed to start container', err.response && err.response.data);
+      throw new ApiError('portainer', err.status || err.response?.status, 'Failed to start container', err.body || err.response?.data);
     }
   }
 
   async function stopContainer(endpointId, containerId) {
     try {
-      const res = await client.post(`/api/endpoints/${endpointId}/docker/containers/${containerId}/stop`);
-      return res.data;
+      const data = await client.post(`/api/endpoints/${endpointId}/docker/containers/${containerId}/stop`);
+      return data;
     } catch (err) {
-      throw new ApiError('portainer', err.response && err.response.status, 'Failed to stop container', err.response && err.response.data);
+      throw new ApiError('portainer', err.status || err.response?.status, 'Failed to stop container', err.body || err.response?.data);
     }
   }
 
@@ -108,4 +145,3 @@ function initPortainer({ baseUrl, apiKey, authHeader } = {}) {
 }
 
 module.exports = { initPortainer, ApiError };
-

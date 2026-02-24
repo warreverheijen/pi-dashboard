@@ -3,8 +3,13 @@
     --secondary-color: white;
     --background-color: #D3D3D3;
     --highlight-color: #e158e1;
-    --green-color: #59cd5e;
     --font-family: 'Monospace', monospace;
+    --color-cpu: #3498db;
+    --color-temp: #e74c3c;
+    --color-ram: #9b59b6;
+    --color-network: #1abc9c;
+    --color-storage-sd: #f39c12;
+    --color-storage-external: #2ecc71;
 }
 
 body {
@@ -45,7 +50,8 @@ body {
     transform: translateY(-100%);
 }
 
-.page .content {
+/* Page-specific content layouts */
+.overview-content {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-rows: 1fr 2fr 3fr;
@@ -60,16 +66,31 @@ body {
     overflow-y: auto;
 }
 
-.page-title {
-    position: absolute;
-    top: 2rem;
-    left: 2rem;
-    font-size: 2rem;
-    color: var(--primary-color);
-    margin: 0;
-    z-index: 10;
+.storage-content {
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    gap: 1rem;
+    overflow: hidden;
 }
 
+.stack-content,
+.media-content,
+.settings-content {
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    gap: 1rem;
+    overflow-y: auto;
+}
+
+/* Common Styles */
 .menu {
     background-color: var(--primary-color);
     display: flex;
@@ -83,11 +104,6 @@ body {
     gap: 20px;
     box-sizing: border-box;
 }
-
-.menu.active-overview {
-    background-color: var(--primary-color);
-}
-
 .menu-item {
     display: block;
     width: 36px;
@@ -97,52 +113,40 @@ body {
     cursor: pointer;
     transition: transform 0.3s ease;
 }
-
 .menu-item:hover {
     transform: scale(1.1);
 }
-
-.settings {
+.menu-item:last-child {
     margin-top: 20vh;
 }
 
-.content {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 1fr 2fr 3fr;
-    grid-template-areas: "title search search"
-                         "stats1 storage stack stack"
-                         "stats1 stats2 stats3";
-    padding: 2rem;
-    width: 100%;
-    height: 100vh;
-    box-sizing: border-box;
-    gap: 1rem;
-}
 
+/* -----Overview Page----- */
+.overview-title {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin: 0;
+}
 .overview-item {
     background-color: var(--background-color);
     border-radius: 8px;
-    padding: 12px;
-    overflow-y: auto;
+    padding: 12px;;
 }
-
 .welcome-title {
     font-size: 2rem;
     color: var(--primary-color);
     margin: 0;
 }
-
 .welcome-text {
     font-size: 1rem;
     color: var(--primary-color);
     margin: 0;
 }
-
 .overview-welcome {
     grid-area: title;
 }
 
+/*searchbar*/
 .overview-search {
     align-self: center;
     grid-area: search;
@@ -152,7 +156,6 @@ body {
     box-sizing: border-box;
     border-radius: 8px;
 }
-
 .searchbar {
     padding-left: 10px;
     margin: 0;
@@ -164,10 +167,7 @@ body {
     align-self: center;
 }
 
-.cs-overview {
-    grid-area: cloud-storage;
-}
-
+/*stack*/
 .stack-overview {
     overflow: hidden;
     grid-area: stack;
@@ -175,12 +175,10 @@ body {
     display: flex;
     flex-direction: column;
 }
-
 .stack-overview > div {
     height: 100%;
     overflow-y: auto;
 }
-
 .stack-list {
     min-height: 0;
     list-style: none;
@@ -191,7 +189,6 @@ body {
     overflow: hidden;
     gap: 8px;
 }
-
 .stack-item {
     display: flex;
     gap: 10px;
@@ -210,13 +207,11 @@ body {
     background-position: center;
     background-size: cover;
 }
-
 .stack-info {
     display: flex;
     flex-direction: column;
     min-width: 0;
 }
-
 .stack-name {
     font-weight: 600;
     color: black;
@@ -224,7 +219,6 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
 .stack-meta {
     font-size: 0.85rem;
     color: #555;
@@ -232,7 +226,6 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
 .stack-refresh-btn {
     margin-bottom: 8px;
     padding: 6px 10px;
@@ -245,50 +238,40 @@ body {
     top: 8px;
     z-index: 2;
 }
-
 .stack-empty {
     color: #444;
     font-style: italic;
 }
 
+/*stats*/
 .stats1-overview {
     grid-area: stats1;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
 }
-
 .stats2-overview {
     grid-area: stats2;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
 }
-
 .stats3-overview {
     grid-area: stats3;
     display: flex;
     flex-direction: column;
 }
-
-.overview-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    margin: 0 0 12px 0;
-    padding: 0;
-}
-
 .stat-line {
     display: flex;
     justify-content: space-between;
     font-size: 0.95rem;
     padding-bottom: 0;
-    margin-bottom: 0;
+    margin-bottom: 4px;
 }
-
 .stat-line span:last-child {
     font-weight: 600;
 }
-
 .stat-empty {
     color: #555;
     font-style: italic;
@@ -309,7 +292,6 @@ body {
     overflow: hidden;
     flex-shrink: 0;
 }
-
 #diskChart1::before {
     content: '';
     position: absolute;
@@ -317,12 +299,11 @@ body {
     height: 100%;
     border-radius: 50%;
     background: conic-gradient(
-        var(--highlight-color) 0deg,
-        var(--highlight-color) calc(var(--percent) * 3.6deg),
+        var(--color-storage-sd) 0deg,
+        var(--color-storage-sd) calc(var(--percent) * 3.6deg),
         white calc(var(--percent) * 3.6deg)
     );
 }
-
 #diskChart2::before {
     content: '';
     position: absolute;
@@ -330,18 +311,16 @@ body {
     height: 100%;
     border-radius: 50%;
     background: conic-gradient(
-        var(--green-color) 0deg,
-        var(--green-color) calc(var(--percent) * 3.6deg),
+        var(--color-storage-external) 0deg,
+        var(--color-storage-external) calc(var(--percent) * 3.6deg),
         white calc(var(--percent) * 3.6deg)
     );
 }
-
 .disk-inner {
     position: relative;
     z-index: 2;
     text-align: center;
 }
-
 .disk-percent {
     font-size: 1.2rem;
     font-weight: 600;
@@ -354,17 +333,13 @@ body {
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
-    gap: 1rem;
     width: 100%;
-    margin-bottom: 12px;
 }
-
 .stats-content {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    justify-content: space-between;
 }
-
 .stat-block {
     display: flex;
     flex-direction: column;
@@ -379,7 +354,6 @@ body {
     width: 100%;
     padding: 20px 0;
 }
-
 .loading-spinner {
     width: 40px;
     height: 40px;
@@ -389,13 +363,12 @@ body {
     animation: spin 1s linear infinite;
     margin-bottom: 10px;
 }
-
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-/* Bar Containers and Segments */
+/* Bar Chart*/
 .cpu-bar-container,
 .cpu-temp-bar-container,
 .ram-bar-container,
@@ -403,50 +376,173 @@ body {
     display: flex;
     align-items: flex-end;
     gap: 2px;
-    height: 50px;
+    height: 100px;
     width: 100%;
     background: rgba(0,0,0,0.05);
-    padding: 4px;
     border-radius: 6px;
     box-sizing: border-box;
-    margin-top: 4px;
-    margin-bottom: 8px;
-}
+    padding: 4px;}
 
-.ram-bar-container {
-    height: 60px;
+.cpu-bar-segment {
+    flex: 1;
+    height: 0;
+    border-radius: 2px;
+    transition: height 0.5s ease;
+    background-color: var(--color-cpu);
 }
-
-.cpu-bar-segment,
-.cpu-temp-bar-segment,
-.ram-bar-segment,
+.cpu-temp-bar-segment {
+    flex: 1;
+    height: 0;
+    border-radius: 2px;
+    transition: height 0.5s ease;
+    background-color: var(--color-temp);
+}
+.ram-bar-segment {
+    flex: 1;
+    height: 0;
+    border-radius: 2px;
+    transition: height 0.5s ease;
+    background-color: var(--color-ram);
+}
 .net-bar-segment {
     flex: 1;
     height: 0;
     border-radius: 2px;
     transition: height 0.5s ease;
+    background-color: var(--color-network);
 }
 
-.cpu-bar-segment,
-.cpu-temp-bar-segment {
-    background-color: var(--green-color);
+/*----- Storage Page -----*/
+.file-browser {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+.browser-header {
+    padding: 12px;
+    background: var(--background-color);
+    border-bottom: 1px solid #ccc;
+    overflow-x: auto;
 }
 
-.ram-bar-segment {
+.breadcrumb {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    align-items: center;
+    font-size: 0.9rem;
+}
+.breadcrumb-item {
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s;
+    user-select: none;
+}
+.breadcrumb-item:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+.breadcrumb-separator {
+    color: #999;
+    margin: 0 2px;
+}
+
+.browser-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+    flex-wrap: wrap;
+}
+.toolbar-btn {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+.toolbar-btn:hover:not(:disabled) {
     background: var(--highlight-color);
+    color: white;
+    border-color: var(--highlight-color);
+}
+.toolbar-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.toolbar-icon{
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.net-bar-segment {
-    background: linear-gradient(
-        to top,
-        var(--green-color) 0,
-        var(--green-color) calc(100% - 5px),
-        var(--highlight-color) 100%
-    );
+.browser-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
 }
 
-.stat-divider {
-    height: 1px;
-    background: rgba(0,0,0,0.1);
-    margin: 6px 0;
+.file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.file-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background 0.2s;
+    user-select: none;
+}
+.file-item:hover {
+    background: #f9f9f9;
+}
+.file-item.selected {
+    background: rgba(225, 88, 225, 0.1);
+}
+.file-icon {
+    margin-right: 12px;
+    font-size: 1.2rem;
+    min-width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+}
+.file-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.file-info {
+    flex: 1;
+    min-width: 0;
+}
+.file-name {
+    font-weight: 500;
+    color: var(--primary-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.file-meta {
+    font-size: 0.85rem;
+    color: #999;
+    margin-top: 2px;
+}
+.file-size {
+    margin-right: 16px;
+    color: #999;
+    font-size: 0.85rem;
+    white-space: nowrap;
 }
