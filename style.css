@@ -1,7 +1,7 @@
 :root {
-    --primary-color: black;
-    --secondary-color: white;
-    --background-color: #D3D3D3;
+    --primary-color: #232020;
+    --secondary-color: #fffdfd;
+    --background-color: #F2F0F0;
     --highlight-color: #e158e1;
     --font-family: 'Monospace', monospace;
     --color-cpu: #3498db;
@@ -10,6 +10,8 @@
     --color-network: #1abc9c;
     --color-storage-sd: #f39c12;
     --color-storage-external: #2ecc71;
+    --light-background: #F2F0F0;
+
 }
 
 body {
@@ -17,6 +19,9 @@ body {
     margin: 0;
     display: flex;
     font-family: var(--font-family), monospace;
+    /* apply theme variables to page */
+    background-color: var(--background-color);
+    color: var(--primary-color);
 }
 
 /* Pages Container */
@@ -91,7 +96,11 @@ body {
 }
 
 /* Common Styles */
+lord-icon{
+    color: var(--secondary-color);
+}
 .menu {
+    /* Changed: use secondary color for the menu background so it can adapt per theme */
     background-color: var(--primary-color);
     display: flex;
     justify-content: space-between;
@@ -123,15 +132,15 @@ body {
 
 /* -----Overview Page----- */
 .overview-title {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     color: var(--primary-color);
     margin: 0;
 }
 .overview-item {
-    background-color: var(--background-color);
+    background-color: var(--secondary-color);
     border-radius: 8px;
     padding: 12px;;
-}
+    }
 .welcome-title {
     font-size: 2rem;
     color: var(--primary-color);
@@ -151,7 +160,8 @@ body {
     align-self: center;
     grid-area: search;
     display: flex;
-    border: 2px solid var(--background-color);
+    border: 2px solid var(--primary-color);
+    background-color: var(--secondary-color);
     height: 50%;
     box-sizing: border-box;
     border-radius: 8px;
@@ -267,7 +277,7 @@ body {
     justify-content: space-between;
     font-size: 0.95rem;
     padding-bottom: 0;
-    margin-bottom: 4px;
+    margin: 6px 0 4px 0 ;
 }
 .stat-line span:last-child {
     font-weight: 600;
@@ -287,10 +297,11 @@ body {
     display: grid;
     align-items: center;
     justify-content: center;
-    background: white;
+    background: var(--light-background);
     position: relative;
     overflow: hidden;
     flex-shrink: 0;
+    margin-top: 6px;
 }
 #diskChart1::before {
     content: '';
@@ -301,7 +312,7 @@ body {
     background: conic-gradient(
         var(--color-storage-sd) 0deg,
         var(--color-storage-sd) calc(var(--percent) * 3.6deg),
-        white calc(var(--percent) * 3.6deg)
+        var(--light-background) calc(var(--percent) * 3.6deg)
     );
 }
 #diskChart2::before {
@@ -313,7 +324,7 @@ body {
     background: conic-gradient(
         var(--color-storage-external) 0deg,
         var(--color-storage-external) calc(var(--percent) * 3.6deg),
-        white calc(var(--percent) * 3.6deg)
+        var(--light-background) calc(var(--percent) * 3.6deg)
     );
 }
 .disk-inner {
@@ -339,6 +350,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    flex-grow: 1;
 }
 .stat-block {
     display: flex;
@@ -376,7 +388,7 @@ body {
     display: flex;
     align-items: flex-end;
     gap: 2px;
-    height: 100px;
+    flex-grow: 1;
     width: 100%;
     background: rgba(0,0,0,0.05);
     border-radius: 6px;
@@ -545,4 +557,49 @@ body {
     color: #999;
     font-size: 0.85rem;
     white-space: nowrap;
+}
+
+/* Settings panel styles */
+.settings-panel {
+    margin-top: 16px;
+    background-color: rgba(0,0,0,0.03);
+    padding: 12px;
+    border-radius: 8px;
+    width: 360px;
+    max-width: 90%;
+}
+.setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.setting-row label {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Theme (dark) overrides */
+body.dark {
+    --primary-color: #ffffff;
+    --secondary-color: #111214; /* menu background */
+    --background-color: #0f1113;
+    --highlight-color: #7b61ff;
+    --color-cpu: #4aa3ff;
+    --color-temp: #ff7b7b;
+    --color-ram: #c89bff;
+    --color-network: #4fe0c1;
+    --color-storage-sd: #f5b65c;
+    --color-storage-external: #3bd27a;
+}
+
+/* Ensure some components contrast well in dark */
+body.dark .overview-item,
+body.dark .storage-card,
+body.dark .file-browser,
+body.dark .browser-header,
+body.dark .browser-toolbar,
+body.dark .settings-panel {
+    background-color: rgba(255,255,255,0.03);
+    border-color: rgba(255,255,255,0.04);
 }

@@ -598,10 +598,55 @@ function initializeFileBrowser() {
   // Load initial file browser
   navigateToPath('');}
 
+// THEME: light/dark toggle
+const THEME_KEY = 'theme';
 
+function applyTheme(theme) {
+  if (!theme || theme === 'light') {
+    document.body.classList.remove('dark');
+  } else {
+    document.body.classList.add('dark');
+  }
+  updateThemeButtonLabel();
+}
+
+function updateThemeButtonLabel() {
+  const btn = document.getElementById('themeToggleBtn');
+  if (!btn) return;
+  const isDark = document.body.classList.contains('dark');
+  btn.textContent = isDark ? 'Switch to Light' : 'Switch to Dark';
+}
+
+function toggleTheme() {
+  const isDark = document.body.classList.toggle('dark');
+  const theme = isDark ? 'dark' : 'light';
+  try {
+    localStorage.setItem(THEME_KEY, theme);
+  } catch (e) {
+    console.warn('Could not persist theme:', e);
+  }
+  updateThemeButtonLabel();
+}
 
 // Toolbar event listeners and initialization
 document.addEventListener('DOMContentLoaded', () => {
+  // Apply saved theme early
+  try {
+    const saved = localStorage.getItem(THEME_KEY) || 'light';
+    applyTheme(saved);
+  } catch (e) {
+    applyTheme('light');
+  }
+
+  // Wire settings theme button
+  const themeBtn = document.getElementById('themeToggleBtn');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleTheme();
+    });
+  }
+
   // Initialize overview page
   switchPage('overview');
   initOverview();
