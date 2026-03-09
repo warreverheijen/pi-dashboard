@@ -6,9 +6,20 @@ const fileUpload = require('express-fileupload');
 const config = require('./config');
 const { initPortainer } = require('./CLIENTS/portainerClient');
 const { initServerStats } = require('./CLIENTS/serverStatsClient');
+const { initOllama } = require('./CLIENTS/ollamaClient');
+
+// Initialize Ollama Cloud client (may throw if OLLAMA_API_KEY missing)
+let ollamaClient = null;
+try {
+  ollamaClient = initOllama();
+  console.log('Ollama client initialized');
+} catch (e) {
+  console.warn('Ollama client not initialized:', e.message);
+  ollamaClient = null;
+}
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8001;
 
 // Cache for OS CPU usage fallback
 let lastCpuSample = null;
@@ -399,9 +410,33 @@ app.post('/api/rename', (req, res) => {
 
     fs.renameSync(filePath, newPath);
     res.json({ success: true });
+
   } catch (err) {
     console.error('Error in /api/rename:', err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// AI generate endpoint for RaspPy (backend-only)
+app.post('/api/ai/generate', async (req, res) => {
+  try {
+    if (!ollamaClient) {
+      return res.status(500).json({ error: 'Ollama client not configured on server (missing OLLAMA_API_KEY)' });
+    }
+
+    const { prompt, model, system, format, options } = req.body || {};
+    if (!prompt || typeof prompt !== 'string') {
+      return res.status(400).json({ error: 'Missing or invalid `prompt` in request body' });
+    }
+
+    // Call Ollama Cloud
+    const result = await ollamaClient.generate(prompt, { model, system, format, options });
+
+    res.json({ ok: true, result });
+  } catch (err) {
+    console.error('Error in /api/ai/generate:', err);
+    // If the error has an HTTP-like status, bubble it; otherwise return 500
+    res.status(500).json({ error: err.message || 'AI generation failed' });
   }
 });
 
